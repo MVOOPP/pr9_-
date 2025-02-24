@@ -49,7 +49,7 @@ if (isset($_SESSION['user']) && $_SESSION['user'] != -1) {
                     <div class="sub-name">Пароль:</div>
                     <input name="password" type="password" placeholder="Введите пароль" required>
                     <center>
-                        <div class="g-recaptcha" data-sitekey="6LcDReAqAAAAAEDozYn2nNvaBLbhokyfHaqQqcIK"></div>
+                        <div class="g-recaptcha" data-sitekey="6Ld6c-EqAAAAACUIBn6CcXLm2QU8p3YDCYcxQH0s"></div>
                     </center>
                     <a href="regin.php">Регистрация</a>
                     <br>

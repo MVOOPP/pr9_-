@@ -12,7 +12,7 @@ ini_set('display_errors', 1);
 ob_clean();
 
 // reCAPTCHA ключ
-$secretKey = "6LcDReAqAAAAAH5U_HqwhzqcOiNffQ00drK0qL8B";
+$secretKey = "6Ld6c-EqAAAAAPB5U8DwPGjJ3dqm4vYeA_sczsh8";
 
 // Проверка, передан ли токен reCAPTCHA
 if (!isset($_POST['g-recaptcha-response']) || empty($_POST['g-recaptcha-response'])) {
@@ -21,7 +21,23 @@ if (!isset($_POST['g-recaptcha-response']) || empty($_POST['g-recaptcha-response
 }
 
 // Проверяем reCAPTCHA
-$response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=" . $_POST['g-recaptcha-response'] . "&remoteip=" . $_SERVER['REMOTE_ADDR']);
+$recaptcha_url = "https://www.google.com/recaptcha/api/siteverify";
+$data = [
+    'secret' => $secretKey,
+    'response' => $_POST['g-recaptcha-response'],
+    'remoteip' => $_SERVER['REMOTE_ADDR']
+];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $recaptcha_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+$response = curl_exec($ch);
+curl_close($ch);
+
+$responseKeys = json_decode($response, true);
 $responseKeys = json_decode($response, true);
 
 if (!$responseKeys["success"]) {
@@ -39,12 +55,10 @@ if (empty($login) || empty($password)) {
     exit;
 }
 
-// ✅ Проверяем, существует ли колонка `role` в таблице `users`
 $result = $mysqli->query("SHOW COLUMNS FROM users LIKE 'role'");
 $roleExists = $result->num_rows > 0;
 $result->free();
 
-// ✅ Формируем SQL-запрос в зависимости от наличия `role`
 if ($roleExists) {
     $stmt = $mysqli->prepare("SELECT id, password, role FROM users WHERE login = ?");
 } else {
@@ -71,7 +85,6 @@ if ($stmt->num_rows === 1) {
 
     $stmt->fetch();
 
-    // ✅ Проверяем, хранятся ли пароли в открытом виде
     if (strlen($hashed_password) < 60) {
         $isPasswordCorrect = ($password === $hashed_password); // Пароли хранятся как обычный текст
     } else {
